@@ -36,7 +36,7 @@
     }
     h1 .highlight {
       font-size: 2em; /* 2 times larger than normal text */
-      color: #e74c3c; /* Matches the UI red tone */
+      color: #e74c3c;  /* Matches the UI red tone */
     }
     /* Canvas and pointer styling */
     #wheelContainer {
@@ -49,12 +49,14 @@
       border-radius: 50%;
       background: #fff;
     }
-    /* Pointer triangle positioned above the wheel */
+    /* Pointer triangle positioned above the wheel.
+       The transform now includes rotate(180deg) to invert the pointer
+       so that its tip faces the wheel. */
     #pointer {
       position: absolute;
       top: -20px;
       left: 50%;
-      transform: translateX(-50%);
+      transform: translateX(-50%) rotate(180deg);
       width: 0;
       height: 0;
       border-left: 20px solid transparent;
@@ -114,7 +116,7 @@
 </head>
 <body>
   <div class="container">
-    <!-- Main heading (unchanged) -->
+    <!-- Main heading with "فرصتكم" highlighted -->
     <h1><span class="highlight">فرصتكم</span> لاستقبال العمالة المنزلية</h1>
     <div id="wheelContainer">
       <div id="pointer"></div>
