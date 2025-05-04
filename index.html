@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Spin & Win Coupons!</title>
+  <!-- Google Fonts: Cairo for Arabic headings and Poppins for body text -->
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    /* Global styling */
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #f6d365, #fda085);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+    .container {
+      text-align: center;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 2px 15px rgba(0, 0, 0, 0.2);
+    }
+    /* Arabic heading using Cairo Bold; only "فرصتكم" is specially styled */
+    h1 {
+      margin-bottom: 20px;
+      color: #333;
+      font-family: 'Cairo', sans-serif;
+      font-weight: 700;
+      font-size: 28px;
+    }
+    h1 .highlight {
+      font-size: 2em; /* 2 times larger than normal text */
+      color: #e74c3c; /* Matches the UI red tone */
+    }
+    /* Canvas and pointer styling */
+    #wheelContainer {
+      position: relative;
+      width: 500px;
+      height: 500px;
+      margin: 0 auto;
+    }
+    canvas {
+      border-radius: 50%;
+      background: #fff;
+    }
+    /* Pointer triangle positioned above the wheel */
+    #pointer {
+      position: absolute;
+      top: -20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 20px solid transparent;
+      border-right: 20px solid transparent;
+      border-bottom: 30px solid #e74c3c;
+    }
+    #spinBtn {
+      margin-top: 20px;
+      padding: 15px 30px;
+      background-color: #e74c3c;
+      border: none;
+      outline: none;
+      color: #fff;
+      font-size: 18px;
+      cursor: pointer;
+      border-radius: 10px;
+      transition: background 0.3s ease;
+    }
+    #spinBtn:hover {
+      background-color: #c0392b;
+    }
+    /* Modal styling – a large, professional popup */
+    .modal {
+      display: none; /* Hidden by default */
+      position: fixed;
+      z-index: 100;
+      left: 0;
+      top: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(0, 0, 0, 0.6);
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-content {
+      background: #fff;
+      padding: 60px 90px;
+      border-radius: 8px;
+      text-align: center;
+      position: relative;
+      min-width: 900px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+      font-size: 2rem;
+    }
+    .close-button {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      font-size: 36px;
+      color: #aaa;
+      cursor: pointer;
+    }
+    .close-button:hover {
+      color: #000;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Main heading (unchanged) -->
+    <h1><span class="highlight">فرصتكم</span> لاستقبال العمالة المنزلية</h1>
+    <div id="wheelContainer">
+      <div id="pointer"></div>
+      <canvas id="wheel" width="500" height="500"></canvas>
+    </div>
+    <button id="spinBtn">Spin the Wheel!</button>
+  </div>
+  
+  <!-- Modal for the winning message -->
+  <div id="modal" class="modal">
+    <div class="modal-content">
+      <span id="closeBtn" class="close-button">&times;</span>
+      <p id="win-text"></p>
+    </div>
+  </div>
+  
+  <script>
+    // Get canvas, context, UI elements, and modal components
+    const canvas = document.getElementById("wheel");
+    const context = canvas.getContext("2d");
+    const spinBtn = document.getElementById("spinBtn");
+    const modal = document.getElementById("modal");
+    const closeBtn = document.getElementById("closeBtn");
+    const winText = document.getElementById("win-text");
+    
+    // Define coupon prizes and corresponding colors
+    const segments = [
+      "10% OFF",
+      "15% OFF",
+      "20% OFF",
+      "Free Shipping",
+      "Buy 1 Get 1",
+      "25% OFF",
+      "5% OFF",
+      "30% OFF",
+      "Free Item",
+      "50% OFF"
+    ];
+    const colors = [
+      "#f44336",
+      "#e91e63",
+      "#9c27b0",
+      "#673ab7",
+      "#3f51b5",
+      "#2196f3",
+      "#03a9f4",
+      "#00bcd4",
+      "#009688",
+      "#4caf50"
+    ];
+    
+    let rotationAngle = 0;    // Current rotation (in radians)
+    let isSpinning = false;   // Allow only one spin per page load
+    
+    // Function to draw the wheel with its segments and text labels
+    function drawWheel() {
+      const numSegments = segments.length;
+      const anglePerSegment = 2 * Math.PI / numSegments;
+      for (let i = 0; i < numSegments; i++) {
+        context.beginPath();
+        context.fillStyle = colors[i];
+        context.moveTo(250, 250);
+        context.arc(250, 250, 250, i * anglePerSegment, (i + 1) * anglePerSegment);
+        context.fill();
+        
+        // Draw the text label for each segment
+        context.save();
+        context.translate(250, 250);
+        context.rotate(i * anglePerSegment + anglePerSegment / 2);
+        context.textAlign = "right";
+        context.fillStyle = "#fff";
+        context.font = "bold 20px 'Poppins', sans-serif";
+        context.fillText(segments[i], 230, 10);
+        context.restore();
+      }
+    }
+    
+    // Redraw the wheel using the current accumulated rotation angle.
+    function drawWheelWithAngle() {
+      context.clearRect(0, 0, canvas.width, canvas.height);
+      context.save();
+      context.translate(250, 250);
+      context.rotate(rotationAngle);
+      context.translate(-250, -250);
+      drawWheel();
+      context.restore();
+    }
+    
+    // When the spin finishes, wait 3 seconds then display the modal with an all-English winning message.
+    function finishSpin(totalTime) {
+      // Adjust for the fixed pointer (rotate by 90°)
+      let effectiveAngle = (rotationAngle * 180 / Math.PI + 90) % 360;
+      if (effectiveAngle < 0) effectiveAngle += 360;
+      const arcDeg = 360 / segments.length;
+      const winningIndex = Math.floor((360 - effectiveAngle) / arcDeg) % segments.length;
+      const winningSegment = segments[winningIndex];
+      
+      // Build the modal message completely in English.
+      winText.innerHTML = `
+        <span style="color: #e74c3c; font-weight:700; font-size:6rem;">Congratulations!</span>
+        <br/><br/>
+        You have won <span style="color: ${colors[winningIndex]}; font-weight:600; font-size:3rem;">${winningSegment}</span>
+        <br/><br/>
+        Enjoy your prize!
+      `;
+      // Wait 3 seconds after stopping before displaying the popup.
+      setTimeout(() => {
+        modal.style.display = "flex";
+      }, 3000);
+    }
+    
+    /* 
+      Spin function details:
+      - The wheel starts at 6 spins per second (i.e. initialSpeed = 6×2π rad/s).
+      - The speed decays by 20% each second (using exponential decay with k ≈ 0.223144).
+      - The wheel is considered stopped when the speed falls below 0.1 spins/second.
+      - Calculation shows it will take approximately 18.36 seconds to come to a complete stop.
+      - After the wheel stops, a further 3-second delay occurs before the modal appears.
+      - Also, the spin button is disabled and its background turns grey so that no further spin may be attempted.
+    */
+    function spin() {
+      if (isSpinning) return;
+      isSpinning = true;
+      spinBtn.disabled = true;
+      spinBtn.style.backgroundColor = "grey"; // Change button to grey after the first spin
+      modal.style.display = "none";
+      
+      const initialSpeed = 6 * 2 * Math.PI; // 6 spins/sec in radians/sec
+      const decayConstant = -Math.log(0.8);  // ≈ 0.223144 (20% decay per second)
+      const thresholdSpeed = 0.1 * 2 * Math.PI; // Stop when speed falls below 0.1 spins/sec
+      
+      let startTime = null, lastTime = null;
+      
+      function animate(timestamp) {
+        if (!startTime) {
+          startTime = timestamp;
+          lastTime = timestamp;
+        }
+        
+        const dt = (timestamp - lastTime) / 1000; // Delta time (seconds)
+        const totalElapsed = (timestamp - startTime) / 1000;
+        
+        // Compute current angular speed using exponential decay
+        const currentSpeed = initialSpeed * Math.exp(-decayConstant * totalElapsed);
+        
+        if (currentSpeed < thresholdSpeed) {
+          // Final update, then stop.
+          rotationAngle += currentSpeed * dt;
+          drawWheelWithAngle();
+          finishSpin(totalElapsed);
+          return;
+        }
+        
+        rotationAngle += currentSpeed * dt;
+        drawWheelWithAngle();
+        lastTime = timestamp;
+        requestAnimationFrame(animate);
+      }
+      
+      requestAnimationFrame(animate);
+    }
+    
+    // Attach the spin event (only one spin allowed per page load)
+    spinBtn.addEventListener("click", spin);
+    
+    // Modal closing events
+    closeBtn.addEventListener("click", () => {
+      modal.style.display = "none";
+    });
+    window.addEventListener("click", (evt) => {
+      if (evt.target === modal) {
+        modal.style.display = "none";
+      }
+    });
+    
+    // Initially, fully draw the wheel before any spin begins.
+    drawWheelWithAngle();
+  </script>
+</body>
+</html>
