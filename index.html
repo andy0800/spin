@@ -34,36 +34,36 @@
       max-width: 500px;
       /* Maintain a 9:16 ratio (width:height) */
       aspect-ratio: 9 / 16;
-      margin: 10px; /* slight offset / margin around container */
+      margin: 10px;
       padding: 10px;
       box-shadow: 0 2px 15px rgba(0, 0, 0, 0.2);
-      /* Use flexbox to distribute vertical space */
       display: flex;
       flex-direction: column;
       justify-content: space-between;
     }
-    /* Main heading */
+    /* Main heading with reduced size so it fits on one line */
     h1 {
       margin: 0;
       color: #333;
       font-family: 'Cairo', sans-serif;
       font-weight: 700;
-      font-size: 1.8rem;
+      font-size: 1.2rem;  /* decreased size */
       text-align: center;
     }
-    /* Highlight the word "فرصتكم" */
+    /* Highlight the word "فرصتكم" with slightly reduced size */
     h1 .highlight {
-      font-size: 2em; /* 2× larger */
-      color: #e74c3c; /* matching the UI red tone */
+      font-size: 1.6em;  /* decreased from 1.8em */
+      color: #e74c3c;
     }
-    /* The wheel container fills available flex space */
+    /* The wheel container forced to a perfect square */
     #wheelContainer {
-      flex: 1;
+      width: 90%;
+      max-width: 400px;
+      aspect-ratio: 1 / 1;
+      margin: 10px auto;
       position: relative;
-      margin-top: 10px;
-      margin-bottom: 10px;
     }
-    /* The canvas fills its container, maintaining a circular shape */
+    /* The canvas fills its container as a perfect circle */
     canvas {
       width: 100%;
       height: 100%;
@@ -75,7 +75,6 @@
       position: absolute;
       top: -20px;
       left: 50%;
-      /* Translate horizontally and rotate 180° to flip the triangle */
       transform: translateX(-50%) rotate(180deg);
       width: 0;
       height: 0;
@@ -118,14 +117,25 @@
     }
     .modal-content {
       background: #fff;
-      padding: 20px;
+      padding: 15px;  /* reduced padding */
       border-radius: 8px;
       text-align: center;
       width: 90%;
       max-width: 350px;
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-      font-size: 1.4rem;
+      font-size: 1.1rem;  /* reduced overall font size */
       position: relative;
+    }
+    .modal-content span.congrats {
+      display: block;
+      font-size: 1.6rem;  /* reduced "Congratulations!" size */
+      color: #e74c3c;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+    .modal-content p {
+      margin: 0.5rem 0;
+      font-size: 1rem;  /* overall text size for modal content */
     }
     .close-button {
       position: absolute;
@@ -138,13 +148,13 @@
     .close-button:hover {
       color: #000;
     }
-    /* Media query adjustments (if needed) */
+    /* Media query adjustments */
     @media screen and (max-width: 500px) {
       h1 {
-        font-size: 1.6rem;
+        font-size: 1.1rem;
       }
       .modal-content {
-        font-size: 1.3rem;
+        font-size: 1rem;
       }
       #spinBtn {
         font-size: 1rem;
@@ -168,6 +178,9 @@
   <div id="modal" class="modal">
     <div class="modal-content">
       <span id="closeBtn" class="close-button">&times;</span>
+      <span class="congrats">Congratulations!</span>
+      <p>You have won <span id="winCoupon" style="color: #2196f3; font-weight:600;">Free Shipping</span></p>
+      <p>Enjoy your prize!</p>
       <p id="win-text"></p>
     </div>
   </div>
@@ -179,9 +192,9 @@
     const spinBtn = document.getElementById("spinBtn");
     const modal = document.getElementById("modal");
     const closeBtn = document.getElementById("closeBtn");
-    const winText = document.getElementById("win-text");
+    const winTextElem = document.getElementById("win-text");
+    const winCouponElem = document.getElementById("winCoupon");
 
-    // Define coupon prizes and corresponding colors
     const segments = [
       "10% OFF",
       "15% OFF",
@@ -200,17 +213,17 @@
       "#9c27b0",
       "#673ab7",
       "#3f51b5",
-      "#2196f3",
+      "#2196f3", // used in modal text example
       "#03a9f4",
       "#00bcd4",
       "#009688",
       "#4caf50"
     ];
 
-    let rotationAngle = 0; // Current rotation (in radians)
+    let rotationAngle = 0; // Current rotation in radians
     let isSpinning = false; // Allow only one spin per page load
 
-    // Draw the wheel with its segments and text labels on the canvas
+    // Draw the wheel with segments and labels
     function drawWheel() {
       const numSegments = segments.length;
       const anglePerSegment = 2 * Math.PI / numSegments;
@@ -221,8 +234,6 @@
         context.moveTo(radius, radius);
         context.arc(radius, radius, radius, i * anglePerSegment, (i + 1) * anglePerSegment);
         context.fill();
-
-        // Draw the segment's text
         context.save();
         context.translate(radius, radius);
         context.rotate(i * anglePerSegment + anglePerSegment / 2);
@@ -234,7 +245,7 @@
       }
     }
 
-    // Redraw the wheel with the current accumulated rotation angle.
+    // Clear and redraw the wheel with rotation
     function drawWheelWithAngle() {
       context.clearRect(0, 0, canvas.width, canvas.height);
       context.save();
@@ -245,24 +256,21 @@
       context.restore();
     }
 
-    // When the wheel stops, determine the winning segment and display the modal after a 3-second delay.
+    // Determine winning segment and display modal with organized, smaller text
     function finishSpin() {
-      // Adjust the angle for the fixed pointer (which is offset by 90 degrees)
       let effectiveAngle = (rotationAngle * 180 / Math.PI + 90) % 360;
       if (effectiveAngle < 0) effectiveAngle += 360;
       const arcDeg = 360 / segments.length;
       const winningIndex = Math.floor((360 - effectiveAngle) / arcDeg) % segments.length;
       const winningSegment = segments[winningIndex];
 
-      // Build the modal message entirely in English.
-      winText.innerHTML = `
-        <span style="color: #e74c3c; font-weight:700; font-size:2.5em;">Congratulations!</span>
-        <br/><br/>
-        You have won <span style="color: ${colors[winningIndex]}; font-weight:600; font-size:1.8em;">${winningSegment}</span>
-        <br/><br/>
-        Enjoy your prize!
-      `;
-      // Wait 3 seconds after stopping before showing the modal popup.
+      // Update the modal dynamic parts (coupon text and its color)
+      winCouponElem.style.color = colors[winningIndex];
+      winCouponElem.innerText = winningSegment;
+
+      // Optional additional text can be set to winTextElem if needed
+      winTextElem.innerText = "";
+      
       setTimeout(() => {
         modal.style.display = "flex";
       }, 3000);
@@ -270,11 +278,11 @@
 
     /* 
       Spin Function Dynamics:
-      - The wheel starts at 6 spins per second (i.e., initialSpeed = 6 × 2π rad/s).
-      - The speed decays by 20% every second using exponential decay (decay constant k ≈ 0.223144).
-      - The wheel stops when the angular speed falls below 0.1 spins/second.
-      - Calculations show that it stops after roughly 18.36 seconds.
-      - When a spin starts, the button is disabled and its background turns grey.
+      - The wheel starts at 6 spins per second (i.e. initialSpeed = 6×2π rad/s).
+      - Decays by 20% per second (exponential decay with k ≈ 0.223144).
+      - Wheel considered stopped when speed falls below 0.1 spins/sec.
+      - This takes approximately 18.36 seconds.
+      - During the spin, the button is disabled and turns grey.
     */
     function spin() {
       if (isSpinning) return;
@@ -283,9 +291,9 @@
       spinBtn.style.backgroundColor = "grey";
       modal.style.display = "none";
       
-      const initialSpeed = 6 * 2 * Math.PI; // 6 spins per second in radians/sec
-      const decayConstant = -Math.log(0.8);  // ≈ 0.223144 (20% decay per second)
-      const thresholdSpeed = 0.1 * 2 * Math.PI; // Stop when speed falls below 0.1 spins/sec
+      const initialSpeed = 6 * 2 * Math.PI; // in rad/s
+      const decayConstant = -Math.log(0.8);  // ≈ 0.223144
+      const thresholdSpeed = 0.1 * 2 * Math.PI; // in rad/s
       
       let startTime = null, lastTime = null;
       
@@ -297,7 +305,6 @@
         const dt = (timestamp - lastTime) / 1000;
         const totalElapsed = (timestamp - startTime) / 1000;
         const currentSpeed = initialSpeed * Math.exp(-decayConstant * totalElapsed);
-        
         if (currentSpeed < thresholdSpeed) {
           rotationAngle += currentSpeed * dt;
           drawWheelWithAngle();
@@ -313,7 +320,7 @@
       requestAnimationFrame(animate);
     }
 
-    // Event listeners for the spin button and modal close events.
+    // Event listeners
     spinBtn.addEventListener("click", spin);
     closeBtn.addEventListener("click", () => {
       modal.style.display = "none";
@@ -324,7 +331,7 @@
       }
     });
 
-    // Initially, draw the wheel fully.
+    // Initially draw the wheel.
     drawWheelWithAngle();
   </script>
 </body>
